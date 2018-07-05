@@ -50,6 +50,8 @@ public:
             ULONG fSeek : 1;
             ULONG fParam : 1;
             ULONG fOutFile : 1;
+            ULONG fLock : 1;
+            ULONG fUnlock : 1;
         };
     };
 };
@@ -76,6 +78,8 @@ tConfig::tConfig(int argc, TCHAR **argv)
                 case 's': fSeek = 1; break;
                 case 'p': fParam = 1; break;
                 case 'o': fOutFile = 1; break;
+                case 'x': fLock = 1; break;
+                case 'u': fUnlock = 1; break;
             }
         }
         else if (fParam)
@@ -319,6 +323,14 @@ static void InsertVolume(const CString& device)
     f.Control(IOCTL_STORAGE_LOAD_MEDIA);
 }
 
+static void LockVolume(const CString& device, bool bLock)
+{
+    XVolumeFile f(device, false);
+    Log(0, "Not implemented yet");
+    //TODO
+    //f.Control(IOCTL_CDROM_EXCLUSIVE_ACCESS);
+}
+
 static void QueryGeometry(const CString& device)
 {
     XVolumeFile f(device, false);
@@ -473,6 +485,7 @@ int wmain(int argc, TCHAR **argv)
             if (cfg.fToc) ReadToc(cfg.device, cfg.parameter);
             if (cfg.fGeometry) QueryGeometry(cfg.device);
             if (cfg.fSeek) ReadVolume(cfg.device, cfg.parameter);
+            if (cfg.fLock || cfg.fUnlock) LockVolume(cfg.device, cfg.fLock);
         }
         else
         {
@@ -482,6 +495,8 @@ int wmain(int argc, TCHAR **argv)
             puts("-l\t\t\t\tList existing volumes");
             puts("-e device\t\t\tEject device media");
             puts("-i device\t\t\tInsert device media");
+            puts("-x device\t\t\tLock device media");
+            puts("-u device\t\t\tUnlock device media");
             puts("-t [-p format] device\t\tRead device TOC");
             puts("\tformat: requested TOC format (0,1,2,10,11,12)");
             puts("-g device\t\t\tQuery device geometry");

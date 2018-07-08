@@ -361,7 +361,7 @@ static void LockVolume(const CString& device, bool bLock)
 #else
 static void LockVolume(const CString& device, bool bLock)
 {
-    XVolumeFile f(device, true);
+    XVolumeFile f(device, false);
     BOOL b = bLock;
 
     if (f.ControlIn(IOCTL_STORAGE_MEDIA_REMOVAL, &b, sizeof(b)) && bLock)

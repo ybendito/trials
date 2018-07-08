@@ -224,7 +224,8 @@ void XFile::Create(LPCWSTR name, bool bWrite)
     if (m_Handle == INVALID_HANDLE_VALUE)
     {
         m_Handle = NULL;
-        Log(LOG_WARNING, "error: can't open device '%S', mode %s", name, bWrite ? "W" : "R");
+        Log(LOG_WARNING, "error: can't open %s '%S', mode %s",
+            m_bDevice ? "device" : "file", name, bWrite ? "W" : "R");
     }
 }
 
@@ -323,13 +324,54 @@ static void InsertVolume(const CString& device)
     f.Control(IOCTL_STORAGE_LOAD_MEDIA);
 }
 
+#if 0
+// this way of locking does not work
 static void LockVolume(const CString& device, bool bLock)
 {
-    XVolumeFile f(device, false);
-    Log(0, "Not implemented yet");
-    //TODO
-    //f.Control(IOCTL_CDROM_EXCLUSIVE_ACCESS);
+    XFile file(filename, false);
+    XVolumeFile f(device, true);
+
+    ULONG size;
+    union
+    {
+        CDROM_EXCLUSIVE_LOCK lock;
+        CDROM_EXCLUSIVE_ACCESS unlock;
+    } data;
+    if (bLock)
+    {
+        data.lock.Access.RequestType = ExclusiveAccessLockDevice;
+        data.lock.Access.Flags = CDROM_LOCK_IGNORE_VOLUME;
+        CStringA s = "Yuri requested to lock it";
+        memcpy_s((char *)data.lock.CallerName, sizeof(data.lock.CallerName), s.GetBuffer(), s.GetLength());
+        size = sizeof(data.lock);
+    }
+    else
+    {
+        data.unlock.RequestType = ExclusiveAccessUnlockDevice;
+        data.unlock.Flags = CDROM_NO_MEDIA_NOTIFICATIONS;
+        size = sizeof(data.unlock);
+    }
+    if (f.Control(IOCTL_CDROM_EXCLUSIVE_ACCESS, &data, size, &data, size) && bLock)
+    {
+        MessageBox(NULL, _T("Disk is locked"), _T("Press OK to unlock the drive"), MB_OK);
+        f.Close();
+        LockVolume(device, false);
+    }
 }
+#else
+static void LockVolume(const CString& device, bool bLock)
+{
+    XVolumeFile f(device, true);
+    BOOL b = bLock;
+
+    if (f.ControlIn(IOCTL_STORAGE_MEDIA_REMOVAL, &b, sizeof(b)) && bLock)
+    {
+        MessageBox(NULL, _T("Disk is locked"), _T("Press OK to unlock the drive"), MB_OK);
+        b = false;
+        f.ControlIn(IOCTL_STORAGE_MEDIA_REMOVAL, &b, sizeof(b));
+    }
+}
+#endif
 
 static void QueryGeometry(const CString& device)
 {

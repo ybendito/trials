@@ -303,13 +303,21 @@ static void ReadVolume(const CString& device, ULONG offset, LPCTSTR filename = N
 
 static void CheckVolume(const CString& device)
 {
+    CStringA s = "Verified: ";
     XVolumeFile f(device, false);
     CDROM_DISK_DATA data;
-    if (f.Control(IOCTL_STORAGE_CHECK_VERIFY) &&
-        f.ControlOut(IOCTL_CDROM_DISK_TYPE, &data, sizeof(data)))
+    s += (f.Control(IOCTL_STORAGE_CHECK_VERIFY)) ? "Yes" : "No";
+    if (f.ControlOut(IOCTL_CDROM_DISK_TYPE, &data, sizeof(data)))
     {
-        Log(0, "Present, type %d", data.DiskData);
+        s.AppendFormat(", type %d", data.DiskData);
     }
+    GET_CONFIGURATION_IOCTL_INPUT cfgIn = { FeatureCdRead, SCSI_GET_CONFIGURATION_REQUEST_TYPE_ALL };
+    GET_CONFIGURATION_HEADER cfgOut;
+    if (f.Control(IOCTL_CDROM_GET_CONFIGURATION, &cfgIn, sizeof(cfgIn), &cfgOut, sizeof(cfgOut)))
+    {
+        s += ", CD feature OK";
+    }
+    Log(0, "%s", (LPCSTR)s);
 }
 
 static void EjectVolume(const CString& device)

@@ -29,6 +29,7 @@
 #include <iostream>
 #include <winioctl.h>
 #include <ntddcdrm.h>
+#include <ntddmmc.h>
 
 #define ELEMENTS_IN(x)       (sizeof(x)/sizeof(x[0])) 
 

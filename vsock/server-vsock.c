@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 		ticks = time(NULL);
 		snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
 		write(connfd, sendBuff, strlen(sendBuff)+1);
-
+		sleep(1);
 		close(connfd);
 		sleep(1);
 	}

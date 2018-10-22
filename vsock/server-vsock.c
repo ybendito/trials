@@ -43,17 +43,26 @@ int main(int argc, char *argv[])
 	serv_addr.svm_cid = 2;
 	serv_addr.svm_port = 5000;
 
+	if (argc > 1) {
+		int n = sscanf(argv[1], "%u:%u", &serv_addr.svm_cid, &serv_addr.svm_port);
+		if (n < 2) {
+			printf("%s: [cid:port]\n", argv[0]);
+			printf("cids: 2(host) or 3(vm)\n");
+			return 1;
+		}
+	}
+	
+
 	/* The call to the function "bind()" assigns the details specified
 	 * in the structure 'serv_addr' to the socket created in the step above
 	 */
 	error = bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-
 	if (error < 0) {
-		printf("\nError on bind: %d\n", errno);
+		printf("\nError %d on bind to %d:%d\n", errno, serv_addr.svm_cid, serv_addr.svm_port);
 		return 1;
 	}
+	
 	printf("\nbound to %d:%d\n", serv_addr.svm_cid, serv_addr.svm_port);
-
 
 	/* The call to the function "listen()" with second argument as 10 specifies
 	 * maximum number of client connections that server will queue for this listening

@@ -77,11 +77,13 @@ int main(int argc, char *argv[])
 	while(1)
 	{
 		struct sockaddr_vm  client_addr;
-		connfd = accept(listenfd, (struct sockaddr*)&client_addr, NULL);
+		socklen_t len = sizeof(client_addr);
+		printf("\nWaiting for incoming connection...\n");
+		connfd = accept(listenfd, (struct sockaddr*)&client_addr, &len);
 
 		if (connfd < 0) {
-			printf("\nError on accept %d\n", connfd);
-			return 1;
+			printf("\nError on accept %d\n", errno);
+			continue;
 		}
 		printf("\nConnection accepted %d:%d\n", client_addr.svm_cid,  client_addr.svm_port);
 

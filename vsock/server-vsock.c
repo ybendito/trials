@@ -92,7 +92,9 @@ int main(int argc, char *argv[])
 		 */
 		ticks = time(NULL);
 		snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
-		write(connfd, sendBuff, strlen(sendBuff)+1);
+		if (write(connfd, sendBuff, strlen(sendBuff)+1) < 0) {
+			printf("failed write, error %d\n", errno);
+		}
 		sleep(1);
 		close(connfd);
 		sleep(1);

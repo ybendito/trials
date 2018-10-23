@@ -7,7 +7,7 @@ endif
 
 .PHONY: default all clean
 
-default: client-vsock server-vsock
+default: client-vsock server-vsock speed-test
 all: default
 
 #OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
@@ -19,7 +19,7 @@ OBJECTS = client-vsock.o server-vsock.o
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PRECIOUS: client-vsock server-vsock $(OBJECTS)
+.PRECIOUS: client-vsock server-vsock speed-test $(OBJECTS)
 
 client-vsock:  client-vsock.o
 	$(CC) client-vsock.o -Wall $(LIBS) -o $@
@@ -27,5 +27,8 @@ client-vsock:  client-vsock.o
 server-vsock:  server-vsock.o
 	$(CC) server-vsock.o -Wall $(LIBS) -o $@
 
+speed-test:  speed-test.o
+	$(CC) speed-test.o -Wall $(LIBS) -o $@
+
 clean:
-	-rm -f *.o client-vsock server-vsock
+	-rm -f *.o client-vsock server-vsock speed-test

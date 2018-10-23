@@ -35,28 +35,28 @@ static void do_client_job(int sockfd)
 		r.magic = MAGIC;
 		r.size  = size;
 		if (write(sockfd, &r, sizeof(r)) < 0) {
-    		printf("Can't write %d, error %d", sizeof(r), errno);
+			printf("Can't write %d, error %d\n", (int)sizeof(r), errno);
 			return;
 		}
 		if (write(sockfd, p, size) < 0) {
-    		printf("Can't write %d, error %d", size, errno);
+			printf("Can't write %d, error %d\n", (int)size, errno);
 			return;
 		}
 		r.magic = r.size = 0;
 		if (read(sockfd, &r, sizeof(r)) < 0) {
-    		printf("Can't read header, error %d", errno);
+			printf("Can't read header, error %d\n", errno);
 			return;
 		}
 		if (r.magic != MAGIC || r.size != size) {
-    		printf("Wrong header received for size %d", size);
+			printf("Wrong header received for size %d\n",(int)size);
 			return;
 		}
 		t2 = clock();
-   		printf("%d transferred in %d ms", size, t2 - t1);
+   		printf("%d transferred in %d ms\n", size, (int)(t2 - t1));
 	}
-	r.magic = r.size = 0;
+	r.size = 0;
 	if (write(sockfd, &r, sizeof(r)) < 0) {
-		printf("Can't write %d, error %d", sizeof(r), errno);
+		printf("Can't write %d, error %d\n", sizeof(r), errno);
 		return;
 	}
 	free(p);
@@ -68,37 +68,48 @@ static void do_server_job(int sockfd)
 	void *p = malloc(max_size);
 	req_header r;
 	int res;
+	int done;
 	do
 	{
+		char *buf = p;
 		if (read(sockfd, &r, sizeof(r)) < 0) {
-    		printf("Can't read header, error %d", errno);
+			printf("Can't read header, error %d\n", errno);
 			return;
 		}
 		if (r.magic != MAGIC) {
-    		printf("Wrong header received");
+			printf("Wrong header received\n");
 			return;
 		}
 		if (r.size == 0)
 			break;
 		if (r.size > max_size)
 		{
-    		printf("too large block");
+			printf("too large block\n");
 			return;
 		}
-		res = read(sockfd, p, r.size);
-		if (res < 0) {
-    		printf("Can't read data, error %d", errno);
-			return;
-		}
-		if (res < r.size) {
-    		printf("partial read of %d < %d", res, r.size);
-			return;
-		}
+		done = 0;
+		do
+		{
+			res = read(sockfd, buf, r.size - done);
+			if (res < 0) {
+				printf("Can't read data, error %d\n", errno);
+				return;
+			}
+			if (res == 0) {
+				printf("Disconnected, error %d\n", errno);
+				return;
+			}
+			done += res;
+			buf += res;
+		} while (done < r.size);
+
 		if (write(sockfd, &r, sizeof(r)) < 0) {
-			printf("Can't write %d, error %d", sizeof(r), errno);
+			printf("Can't write %d, error %d\n", (int)sizeof(r), errno);
 			return;
 		}
 	} while (1);
+	
+	free(p);
 }
 
 

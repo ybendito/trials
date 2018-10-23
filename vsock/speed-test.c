@@ -46,15 +46,25 @@ static int write_splitted(int sockfd, char *buf, int size, int split)
 	return done;
 }
 
+static uint64_t time_ms()
+{
+	struct timespec ts;
+	uint64_t res;
+	if (clock_gettime(CLOCK_MONOTONIC, &ts))
+		return 0;
+	res = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+	return res;
+}
+
 static void do_client_job(int sockfd, int split)
 {
 	req_header r;
 	int size = 1024 * 1024;
-	int max_size = 16 * size;
+	int max_size = 64 * size;
 	void *p = malloc(max_size);
 	for (; size <= max_size; size *= 2)
 	{
-		clock_t t1 = clock(), t2;
+		uint64_t t1 = time_ms(), t2;
 		r.magic = MAGIC;
 		r.size  = size;
 		if (write(sockfd, &r, sizeof(r)) < 0) {
@@ -74,8 +84,9 @@ static void do_client_job(int sockfd, int split)
 			printf("Wrong header received for size %d\n",(int)size);
 			return;
 		}
-		t2 = clock();
+		t2 = time_ms();
    		printf("%d transferred in %d ms\n", size, (int)(t2 - t1));
+		sleep(3);		   
 	}
 	r.size = 0;
 	if (write(sockfd, &r, sizeof(r)) < 0) {
@@ -87,7 +98,7 @@ static void do_client_job(int sockfd, int split)
 
 static int do_server_job(int sockfd)
 {
-	int max_size = 64 * 1024 * 1024;
+	int max_size = 128 * 1024 * 1024;
 	void *p = malloc(max_size);
 	req_header r;
 	int res;

@@ -23,7 +23,30 @@ typedef struct
 	int size;
 } req_header;
 
-static void do_client_job(int sockfd)
+static int write_splitted(int sockfd, char *buf, int size, int split)
+{
+	int chunk = 0x4000;
+	int done  = 0;
+	int res;
+	if (!split) {
+		return write(sockfd, buf, size);
+	}
+	while (size)
+	{
+		if (size < chunk)
+			chunk = size;
+		res = write(sockfd, buf, chunk);
+		if (res <= 0) {
+			return res;
+		}
+		done += res;
+		buf  += res;
+		size -= res;
+	}
+	return done;
+}
+
+static void do_client_job(int sockfd, int split)
 {
 	req_header r;
 	int size = 1024 * 1024;
@@ -38,7 +61,7 @@ static void do_client_job(int sockfd)
 			printf("Can't write %d, error %d\n", (int)sizeof(r), errno);
 			return;
 		}
-		if (write(sockfd, p, size) < 0) {
+		if (write_splitted(sockfd, p, size, split) < 0) {
 			printf("Can't write %d, error %d\n", (int)size, errno);
 			return;
 		}
@@ -220,9 +243,9 @@ int main(int argc, char *argv[])
 	}
 
 	if (client) {
-		do_client_job(sockfd);
+		do_client_job(sockfd, vsock == 0);
 	} else {
-		while (!vsock && !do_server_job(sockfd));
+		while (!do_server_job(sockfd) && !vsock);
 	}
 
 	close(sockfd);

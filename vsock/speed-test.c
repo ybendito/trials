@@ -62,7 +62,7 @@ static void do_client_job(int sockfd)
 	free(p);
 }
 
-static void do_server_job(int sockfd)
+static int do_server_job(int sockfd)
 {
 	int max_size = 64 * 1024 * 1024;
 	void *p = malloc(max_size);
@@ -74,18 +74,18 @@ static void do_server_job(int sockfd)
 		char *buf = p;
 		if (read(sockfd, &r, sizeof(r)) < 0) {
 			printf("Can't read header, error %d\n", errno);
-			return;
+			return 1;
 		}
 		if (r.magic != MAGIC) {
 			printf("Wrong header received\n");
-			return;
+			return 1;
 		}
 		if (r.size == 0)
 			break;
 		if (r.size > max_size)
 		{
 			printf("too large block\n");
-			return;
+			return 1;
 		}
 		done = 0;
 		do
@@ -93,11 +93,11 @@ static void do_server_job(int sockfd)
 			res = read(sockfd, buf, r.size - done);
 			if (res < 0) {
 				printf("Can't read data, error %d\n", errno);
-				return;
+				return 1;
 			}
 			if (res == 0) {
 				printf("Disconnected, error %d\n", errno);
-				return;
+				return 1;
 			}
 			done += res;
 			buf += res;
@@ -105,11 +105,12 @@ static void do_server_job(int sockfd)
 
 		if (write(sockfd, &r, sizeof(r)) < 0) {
 			printf("Can't write %d, error %d\n", (int)sizeof(r), errno);
-			return;
+			return 1;
 		}
 	} while (1);
 	
 	free(p);
+	return 0;
 }
 
 
@@ -221,7 +222,7 @@ int main(int argc, char *argv[])
 	if (client) {
 		do_client_job(sockfd);
 	} else {
-		do_server_job(sockfd);
+		while (!vsock && !do_server_job(sockfd));
 	}
 
 	close(sockfd);

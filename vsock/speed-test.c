@@ -95,7 +95,7 @@ static void do_client_job(int sockfd, int split)
 	}
 	r.size = 0;
 	if (write(sockfd, &r, sizeof(r)) < 0) {
-		printf("Can't write %d, error %d\n", sizeof(r), errno);
+		printf("Can't write %d, error %d\n", (int)sizeof(r), errno);
 		return;
 	}
 	free(p);
@@ -159,6 +159,7 @@ static int usage(char *s)
     printf("\t-v\t\tUse vsync\n");
     printf("\t-s\t\tUse serial\n");
     printf("\t-c\t\tClient\n");
+    printf("\t-c -d devicename\tClient (windows)\n");
     return 1;
 }
 
@@ -167,6 +168,7 @@ int main(int argc, char *argv[])
 	int sockfd = 0, ret;
     int client = 0, vsock = 0;
 	int type = SOCK_STREAM;
+    char *devname = "/dev/virtio-ports/test0";
 	struct sockaddr_vm serv_addr = { 0 };
 	struct sockaddr_vm local_addr = { 0 };
     struct  sockaddr_un unix_addr = { AF_UNIX, "/tmp/foo" };
@@ -199,6 +201,10 @@ int main(int argc, char *argv[])
                 case 'c': client = 1; break;
                 case 's': vsock = 0; break;
                 case 'v': vsock = 1; break;
+                case 'd':
+                    devname = argv[i + 1]; i++;
+                    printf("using device %s\n", devname);
+                    break;
                 default: return usage(*argv);
             }
 		}
@@ -209,7 +215,7 @@ int main(int argc, char *argv[])
     else if (!client)
         sockfd = socket(AF_UNIX, type, 0);
     else
-        sockfd = open("/dev/virtio-ports/test0", O_RDWR);
+        sockfd = open(devname, O_RDWR);
 
     if (sockfd <= 0) {
 		printf("error : Could not create socket, %s\n", strerror(errno));

@@ -166,7 +166,7 @@ static int usage(char *s)
 int main(int argc, char *argv[])
 {
 	int sockfd = 0, ret;
-    int client = 0, vsock = 0;
+    int client = 0, vsock = 0, unixsock = 0;
 	int type = SOCK_STREAM;
     char *devname = "/dev/virtio-ports/test0";
 	struct sockaddr_vm serv_addr = { 0 };
@@ -201,6 +201,7 @@ int main(int argc, char *argv[])
                 case 'c': client = 1; break;
                 case 's': vsock = 0; break;
                 case 'v': vsock = 1; break;
+                case 'u': unixsock = 1; break;
                 case 'd':
                     devname = argv[i + 1]; i++;
                     printf("using device %s\n", devname);
@@ -210,9 +211,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-    if (vsock)
+	if (vsock && unixsock) {
+        printf("incompatible options\n");
+		return 1;
+	}
+
+	if (vsock)
         sockfd = socket(AF_VSOCK, type, 0);
-    else if (!client)
+    else if (!client || unixsock)
         sockfd = socket(AF_UNIX, type, 0);
     else
         sockfd = open(devname, O_RDWR);
@@ -251,7 +257,14 @@ int main(int argc, char *argv[])
 			printf("Failed to connect to %d:%d, error %d\n", serv_addr.svm_cid, serv_addr.svm_port, errno);
 			return 1;
 		}
+	} else if (unixsock && client) {
+		ret = connect(sockfd, (struct sockaddr *)&unix_addr, sizeof(unix_addr));
+		if (ret < 0) {
+			printf("Failed to connect to %s, error %d\n", unix_addr.sun_path, errno);
+			return 1;
+		}
 	}
+
 
 	if (!client) {
 		int listenfd = sockfd; 

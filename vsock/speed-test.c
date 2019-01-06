@@ -152,14 +152,19 @@ static int do_server_job(int sockfd)
 	return 0;
 }
 
+#ifndef WIN32
+#define DEVNAME "/dev/virtio-ports/test0"
+#else
+#define DEVNAME "\\\\.\\test0"
+#endif
 
 static int usage(char *s)
 {
     printf("%s [-v|-s] [-c]\n", s);
-    printf("\t-v\t\tUse vsync\n");
+    printf("\t-v\t\tUse vsock\n");
     printf("\t-s\t\tUse serial\n");
     printf("\t-c\t\tClient\n");
-    printf("\t-c -d devicename\tClient (windows)\n");
+    printf("\t-d devicename\t(for serial client, default %s)\n", DEVNAME);
     return 1;
 }
 
@@ -168,7 +173,7 @@ int main(int argc, char *argv[])
 	int sockfd = 0, ret;
     int client = 0, vsock = 0, unixsock = 0;
 	int type = SOCK_STREAM;
-    char *devname = "/dev/virtio-ports/test0";
+    char *devname = DEVNAME;
 	struct sockaddr_vm serv_addr = { 0 };
 	struct sockaddr_vm local_addr = { 0 };
     struct  sockaddr_un unix_addr = { AF_UNIX, "/tmp/foo" };

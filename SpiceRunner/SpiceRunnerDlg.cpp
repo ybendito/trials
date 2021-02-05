@@ -17,7 +17,7 @@
 // CSpiceRunnerDlg dialog
 
 CSpiceRunnerDlg::CSpiceRunnerDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_SPICERUNNER_DIALOG, pParent), m_Icon(IDR_MAINFRAME, *this)
+	: CDialogEx(IDD_SPICERUNNER_DIALOG, pParent), m_Icon(IDI_ICON1, *this)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
     m_GreenBitmap.LoadBitmap(IDB_BITMAP_GREEN);

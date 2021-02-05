@@ -8,6 +8,7 @@
 #define IDD_SERVER_DETAILS              130
 #define IDB_BITMAP_BLACK                137
 #define IDB_BITMAP_GREEN                138
+#define IDI_ICON1                       141
 #define IDC_ADDRESS                     1000
 #define IDC_PORT                        1001
 #define IDC_CONNECTNOW                  1003
@@ -19,7 +20,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           105

@@ -224,6 +224,7 @@
   <ItemGroup>
     <Image Include="res\black.bmp" />
     <Image Include="res\green.bmp" />
+    <Image Include="res\icon1.ico" />
     <Image Include="res\SpiceRunner.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

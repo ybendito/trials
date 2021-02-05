@@ -49,7 +49,12 @@ protected:
 protected:
     void Connect(CServerItem& Item);
     void Disconnect(CServerItem& Item);
-    void AddServer(CServerItem& Temporary, bool RunIfRequired);
+    void AddServer(CServerItem& Temporary, bool RunIfRequired, bool SilentFail);
+    bool CanAddItem(CServerItem& Item, UINT maxMatches = 0);
     void LoadServers();
     void SaveServers();
+    void MessageBoxError(const CString& Message)
+    {
+        MessageBox(Message, NULL, MB_OK | MB_ICONHAND);
+    }
 };

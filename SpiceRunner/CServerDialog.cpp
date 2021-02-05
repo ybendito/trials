@@ -25,8 +25,12 @@ void CServerDialog::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_Check(pDX, IDC_CONNECTNOW, m_Item.m_ConnectNow);
     DDX_Text(pDX, IDC_ADDRESS, m_Item.m_HostName);
+    if (pDX->m_bSaveAndValidate && m_Item.m_HostName.IsEmpty())
+    {
+        pDX->Fail();
+    }
     DDX_Text(pDX, IDC_PORT, m_Item.m_Port);
-	DDV_MinMaxUInt(pDX, m_Item.m_Port, 1, UINT_MAX);
+	DDV_MinMaxUInt(pDX, m_Item.m_Port, 1, 0xffff);
 }
 
 

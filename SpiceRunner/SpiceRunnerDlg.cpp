@@ -191,9 +191,19 @@ void CSpiceRunnerDlg::ProcessPopupResult(UINT code)
                     break;
                 case CServerItem::esaEdit:
                 {
-                    CServerDialog d(item);
+                    CServerItem newItem = item;
+                    CServerDialog d(newItem);
                     if (d.DoModal() == IDOK)
                     {
+                        bool bChangedName = item.Name().CompareNoCase(newItem.Name());
+                        if (!CanAddItem(newItem, bChangedName ? 0 : 1))
+                        {
+                            CString msg;
+                            msg.Format(_T("Can't change the server entry to %s.\nSuch server already exists."), newItem.Name().GetString());
+                            MessageBoxError(msg);
+                            break;
+                        }
+                        item = newItem;
                         SaveServers();
                         if (item.m_ConnectNow)
                         {
@@ -237,8 +247,37 @@ UINT GetId(CServerItemsArray& Servers)
     return IDC_STATIC;
 }
 
-void CSpiceRunnerDlg::AddServer(CServerItem& Temporary, bool RunIfRequired)
+bool CSpiceRunnerDlg::CanAddItem(CServerItem& Item, UINT maxMatches)
 {
+    UINT matches = 0;
+
+    for (UINT i = 0; i < m_Servers.GetCount(); ++i)
+    {
+        CString s = m_Servers[i].Name();
+        matches += !s.CompareNoCase(Item.Name());
+    }
+    return matches <= maxMatches;
+}
+
+void CSpiceRunnerDlg::AddServer(CServerItem& Temporary, bool RunIfRequired, bool SilentFail)
+{
+    bool bCanAdd = CanAddItem(Temporary);
+
+    if (!bCanAdd)
+    {
+        if (SilentFail)
+        {
+            Log("%s: Can't add duplicated entry %S", __FUNCTION__, Temporary.Name().GetString());
+        }
+        else
+        {
+            CString msg;
+            msg.Format(_T("Can't add new entry for %s.\nSuch server already exists."), Temporary.Name().GetString());
+            MessageBoxError(msg);
+        }
+        return;
+    }
+
     INT_PTR index = m_Servers.Add(Temporary);
     CServerItem& newItem = m_Servers.GetAt(index);
 
@@ -261,7 +300,7 @@ void CSpiceRunnerDlg::OnFileNew()
     CServerDialog d(initial);
     if (d.DoModal() == IDOK)
     {
-        AddServer(initial, true);
+        AddServer(initial, true, false);
     }
 }
 
@@ -293,7 +332,7 @@ void CSpiceRunnerDlg::LoadServers()
             item.m_HostName = AfxGetApp()->GetProfileString(next, _T("Host"), next);
             item.m_Port = AfxGetApp()->GetProfileInt(next, _T("Port"), 0xffff);
 
-            AddServer(item, false);
+            AddServer(item, false, true);
         }
         if (nStart < 0) break;
     } while (true);

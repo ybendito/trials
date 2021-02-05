@@ -67,7 +67,7 @@ public:
     }
     CString m_HostName;
     UINT    m_Port = 10400;
-    BOOL    m_ConnectNow = true;
+    BOOL    m_ConnectNow = false;
     INT     m_Id[esaInvalid];
 protected:
     bool m_Available;

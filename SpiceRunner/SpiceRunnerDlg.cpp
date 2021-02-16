@@ -115,44 +115,74 @@ LRESULT CSpiceRunnerDlg::DefWindowProc(UINT message, WPARAM wParam, LPARAM lPara
     return __super::DefWindowProc(message, wParam, lParam);
 }
 
+void CSpiceRunnerDlg::PutItemToMenu(const CServerItem& item, CMenu& Menu)
+{
+    CString s;
+    CMenu m;
+    BOOL  bConnected;
+    BOOL  bActive = !item.IsDisconnected(bConnected);
+    UINT flag = 0;
+    CString label;
+    m.CreatePopupMenu();
+    if (!bActive)
+    {
+        m.AppendMenu(MF_STRING, item.m_Id[CServerItem::esaConnect], _T("Connect"));
+        m.AppendMenu(MF_SEPARATOR);
+        m.AppendMenu(MF_STRING, item.m_Id[CServerItem::esaEdit], _T("Edit..."));
+        m.AppendMenu(MF_STRING, item.m_Id[CServerItem::esaDelete], _T("Delete"));
+    }
+    else
+    {
+        flag = MF_CHECKED;
+        m.AppendMenu(MF_STRING,
+            item.m_Id[CServerItem::esaDisconnect],
+            _T("Disconnect"));
+    }
+
+    Menu.AppendMenu(MF_STRING | MF_POPUP | flag, (UINT_PTR)m.GetSafeHmenu(), item.Name(true));
+    Menu.SetMenuItemBitmaps(Menu.GetMenuItemCount() - 1, MF_BYPOSITION, NULL,
+        (bActive && bConnected) ? &m_GreenBitmap : &m_BlackBitmap);
+    m.Detach();
+}
+
 void CSpiceRunnerDlg::PreparePopupMenu(CMenu& Menu)
 {
+    // use temporary array of pointers
+    CArray<const CServerItem *> ptrs;
     for (UINT i = 0; i < m_Servers.GetCount(); ++i)
     {
-        CServerItem& item = m_Servers[i];
-        CString s;
-        CMenu m;
-        BOOL  bConnected;
-        BOOL  bActive = !item.IsDisconnected(bConnected);
-        UINT flag = 0;
-        CString label;
-        m.CreatePopupMenu();
-        if (!bActive)
+        ptrs.Add(&m_Servers[i]);
+    }
+    // sort the pointers
+    std::sort(ptrs.GetData(), ptrs.GetData() + ptrs.GetSize(),
+        [](const CServerItem *i1, const CServerItem *i2)
         {
-            m.AppendMenu(MF_STRING, item.m_Id[CServerItem::esaConnect], _T("Connect"));
-            m.AppendMenu(MF_SEPARATOR);
-            m.AppendMenu(MF_STRING, item.m_Id[CServerItem::esaEdit], _T("Edit..."));
-            m.AppendMenu(MF_STRING, item.m_Id[CServerItem::esaDelete], _T("Delete"));
-        }
-        else
-        {
-            flag = MF_CHECKED;
-            m.AppendMenu(MF_STRING,
-                item.m_Id[CServerItem::esaDisconnect],
-                _T("Disconnect"));
-        }
+            return *i1 < *i2;
+        });
 
-        Menu.AppendMenu(MF_STRING | MF_POPUP | flag, (UINT_PTR)m.GetSafeHmenu(), item.Name());
-        Menu.SetMenuItemBitmaps(Menu.GetMenuItemCount() - 1, MF_BYPOSITION, NULL,
-            (bActive && bConnected) ? &m_GreenBitmap : &m_BlackBitmap);
-        m.Detach();
+    // present classified by viewer type and sorted inside the type
+    for (int v = CServerItem::evwSpice; v < CServerItem::evwInvalid; ++v)
+    {
+        UINT done = 0;
+        for (UINT i = 0; i < ptrs.GetCount(); ++i)
+        {
+            const CServerItem *item = ptrs[i];
+            if (item->m_Viewer == v)
+            {
+                PutItemToMenu(*item, Menu);
+                done++;
+            }
+        }
+        if (done)
+        {
+            Menu.AppendMenu(MF_SEPARATOR);
+        }
     }
     
+    Menu.AppendMenu(MF_STRING, ID_FILE_NEW, _T("New..."));
     Menu.AppendMenu(MF_SEPARATOR);
-    Menu.AppendMenu(MF_STRING, ID_FILE_NEW, _T("&New..."));
-    Menu.AppendMenu(MF_SEPARATOR);
-    Menu.AppendMenu(MF_STRING, ID_APP_ABOUT, _T("&Settings..."));
-    Menu.AppendMenu(MF_STRING, ID_APP_EXIT, _T("E&xit"));
+    Menu.AppendMenu(MF_STRING, ID_APP_ABOUT, _T("Settings..."));
+    Menu.AppendMenu(MF_STRING, ID_APP_EXIT, _T("Exit"));
 }
 
 void CSpiceRunnerDlg::ProcessPopupResult(UINT code)
@@ -331,7 +361,7 @@ void CSpiceRunnerDlg::LoadServers()
             CServerItem item;
             item.m_HostName = AfxGetApp()->GetProfileString(next, _T("Host"), next);
             item.m_Port = AfxGetApp()->GetProfileInt(next, _T("Port"), 0xffff);
-
+            item.m_Viewer = AfxGetApp()->GetProfileInt(next, _T("Viewer"), CServerItem::evwSpice);
             AddServer(item, false, true);
         }
         if (nStart < 0) break;
@@ -347,6 +377,7 @@ void CSpiceRunnerDlg::SaveServers()
         CString name = item.Name();
         AfxGetApp()->WriteProfileString(name, _T("Host"), item.m_HostName);
         AfxGetApp()->WriteProfileInt(name, _T("Port"), item.m_Port);
+        AfxGetApp()->WriteProfileInt(name, _T("Viewer"), item.m_Viewer);
         servers += name;
         servers += _T(",");
     }

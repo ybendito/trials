@@ -23,5 +23,6 @@ protected:
 public:
     virtual void OnOK();
     virtual BOOL OnInitDialog();
-    afx_msg void OnBnClickedSelectBin();
+    afx_msg void OnSpiceSelectBin();
+    afx_msg void OnBnClickedSelectVpn();
 };

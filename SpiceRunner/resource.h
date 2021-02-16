@@ -13,8 +13,13 @@
 #define IDC_PORT                        1001
 #define IDC_CONNECTNOW                  1003
 #define IDC_ENABLE_LOG                  1006
-#define IDC_BINARY                      1007
-#define IDC_SELECT_BIN                  1008
+#define IDC_SPICE_BINARY                1007
+#define IDC_SELECT_SPICE                1008
+#define IDC_VPN_BINARY                  1009
+#define IDC_RADIO_SPICE                 1009
+#define IDC_VNC_BINARY                  1009
+#define IDC_SELECT_VPN                  1010
+#define IDC_RADIO_VNC                   1010
 
 // Next default values for new objects
 // 
@@ -22,7 +27,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

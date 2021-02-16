@@ -8,6 +8,8 @@ class CServerItem : public CThreadOwner, public CProcessRunner
 {
 public:
     enum eServerAction { esaFirst, esaConnect = esaFirst, esaDisconnect, esaDelete, esaEdit, esaInvalid };
+    enum eViewerType   { evwSpice, evwVNC, evwInvalid };
+    LPCTSTR m_ViewerNames[evwInvalid] = { _T("Spice"), _T("VNC") };
 
     CServerItem() : CProcessRunner(1000)
     {
@@ -26,6 +28,7 @@ public:
         m_HostName = from.m_HostName;
         m_Port = from.m_Port;
         m_ConnectNow = from.m_ConnectNow;
+        m_Viewer = from.m_Viewer;
         for (UINT i = esaFirst; i < esaInvalid; ++i)
         {
             m_Id[i] = from.m_Id[i];
@@ -59,15 +62,24 @@ public:
         StopThread(false);
         Terminate();
     }
-    CString Name() const
+    CString Name(bool bWithViewer = false) const
     {
         CString s;
         s.Format(_T("%s:%d"), m_HostName.GetString(), m_Port);
+        if (bWithViewer)
+        {
+            s.AppendFormat(_T(" [%s]"), m_ViewerNames[m_Viewer]);
+        }
         return s;
+    }
+    bool friend operator < (const CServerItem& i1, const CServerItem& i2)
+    {
+        return i1.Name() < i2.Name();
     }
     CString m_HostName;
     UINT    m_Port = 10400;
     BOOL    m_ConnectNow = false;
+    int     m_Viewer = evwSpice;
     INT     m_Id[esaInvalid];
 protected:
     bool m_Available;
@@ -96,8 +108,22 @@ protected:
     void StartViewer()
     {
         CString cmdLine;
-        CString exename = Profile.m_Binary;
-        cmdLine.Format(_T("\"%s\" spice://%s:%d"), exename.GetString(), m_HostName.GetString(), m_Port);
+        CString exename;
+        switch (m_Viewer)
+        {
+            case evwSpice:
+                exename = Profile.m_SpiceBinary;
+                cmdLine.Format(_T("\"%s\" spice://%s"), exename.GetString(), m_HostName.GetString());
+                break;
+            case evwVNC:
+                exename = Profile.m_VncBinary;
+                cmdLine.Format(_T("\"%s\" %s"), exename.GetString(), m_HostName.GetString());
+                break;
+            default:
+                return;
+        }
+
+        cmdLine.AppendFormat(_T(":%d"), m_Port);
         RunProcess(cmdLine);
     }
 };

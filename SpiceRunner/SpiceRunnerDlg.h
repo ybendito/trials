@@ -51,6 +51,7 @@ protected:
     void Disconnect(CServerItem& Item);
     void AddServer(CServerItem& Temporary, bool RunIfRequired, bool SilentFail);
     bool CanAddItem(CServerItem& Item, UINT maxMatches = 0);
+    void PutItemToMenu(const CServerItem& Item, CMenu& Menu);
     void LoadServers();
     void SaveServers();
     void MessageBoxError(const CString& Message)

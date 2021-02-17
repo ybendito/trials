@@ -128,4 +128,15 @@ protected:
     }
 };
 
-typedef CArray<CServerItem, CServerItem> CServerItemsArray;
+class CServerItemsArray : public CArray<CServerItem *>
+{
+public:
+    ~CServerItemsArray()
+    {
+        for (int i = 0; i < GetCount(); ++i)
+        {
+            CServerItem *item = ElementAt(i);
+            delete item;
+        }
+    }
+};

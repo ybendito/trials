@@ -27,7 +27,13 @@ public:
         bool bRet = false;
         m_Host = host.GetString();
         m_Port = port;
-        CAsyncSocket::Create();
+        {
+            // looks like a bug in MFC: debug build crashes
+            // when different threads simulateously try
+            //  to register the same window class
+            CMutexSync sync(Profile.m_Mutex);
+            CAsyncSocket::Create();
+        }
         m_SocketState = socketConnecting;
         if (Connect(host, port))
         {

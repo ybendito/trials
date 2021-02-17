@@ -22,7 +22,7 @@ public:
         si.dwFlags = STARTF_USESHOWWINDOW;
         if (CreateProcess(NULL, CommandLine.GetBuffer(), NULL, NULL, FALSE, 0, NULL, _T("."), &si, &pi))
         {
-            ULONG waitTime = m_WaitTime ? m_WaitTime : INFINITE;
+            ULONG waitTime = m_WaitTime ? m_WaitTime * 1000 : INFINITE;
             Log("Started %S", CommandLine.GetBuffer());
             while (WaitForSingleObject(pi.hProcess, waitTime) == WAIT_TIMEOUT)
             {
@@ -37,7 +37,7 @@ public:
         if (pi.hThread) CloseHandle(pi.hThread);
         Clean();
     }
-    static const UINT DefaultWaitTime = 0;
+    static const UINT DefaultWaitTime = 3;
     UINT m_WaitTime = DefaultWaitTime;
 protected:
     STARTUPINFO si;

@@ -1,5 +1,17 @@
 #pragma once
 
+template <typename t>
+class CSync
+{
+public:
+    CSync(t& obj) : m_Obj(obj) { m_Obj.Lock(); }
+    ~CSync() { m_Obj.Unlock(); }
+private:
+    t& m_Obj;
+};
+
+using CMutexSync = CSync<CMutex>;
+
 class CApplicationProfile
 {
 public:
@@ -46,6 +58,7 @@ public:
     CString m_VncBinary;
     bool    m_DebugEnabled;
     bool    m_RestoreConnections;
+    CMutex  m_Mutex;
 private:
     LPCTSTR ProfileName = _T("Default");
     class CRunKey : public CRegKey

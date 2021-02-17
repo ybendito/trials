@@ -29,6 +29,7 @@ public:
             return false;
         }
         InterlockedCompareExchange(&m_State, tsRunning, tsNotRunning);
+        //AfxBeginThread
         m_ThreadHandle = (HANDLE)_beginthread(_ThreadProc, 0, this);
         if (IsThreadRunning())
         {
@@ -62,6 +63,7 @@ protected:
     virtual void ThreadTerminated(tThreadState previous)
     {
         UNREFERENCED_PARAMETER(previous);
+        m_ThreadHandle = NULL;
     }
     static void __cdecl _ThreadProc(PVOID param)
     {
@@ -69,7 +71,6 @@ protected:
         if (pOwner->ThreadProc())
         {
             //CloseHandle(pOwner->m_ThreadHandle);
-            pOwner->m_ThreadHandle = NULL;
             LONG val = InterlockedExchange(&pOwner->m_State, tsNotRunning);
             pOwner->ThreadTerminated((tThreadState)val);
         }

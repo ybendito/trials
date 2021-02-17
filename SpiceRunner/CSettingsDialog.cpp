@@ -41,7 +41,8 @@ BOOL CSettingsDialog::OnInitDialog()
     CheckDlgButton(IDC_ENABLE_LOG, Profile.m_DebugEnabled);
     SetDlgItemText(IDC_SPICE_BINARY, Profile.m_SpiceBinary);
     SetDlgItemText(IDC_VNC_BINARY, Profile.m_VncBinary);
-
+    CheckDlgButton(IDC_AUTO_RUN, Profile.IsAutoStartEnabled());
+    CheckDlgButton(IDC_RESTORE_CONNECTIONS, Profile.m_RestoreConnections);
     return TRUE;  // return TRUE unless you set the focus to a control
                   // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -51,10 +52,15 @@ void CSettingsDialog::OnOK()
     Profile.m_DebugEnabled = IsDlgButtonChecked(IDC_ENABLE_LOG);
     GetDlgItemText(IDC_SPICE_BINARY, Profile.m_SpiceBinary);
     GetDlgItemText(IDC_VNC_BINARY, Profile.m_VncBinary);
-
+    Profile.m_RestoreConnections = IsDlgButtonChecked(IDC_RESTORE_CONNECTIONS);
+    bool bAutoStart = Profile.IsAutoStartEnabled();
+    bool bChecked = IsDlgButtonChecked(IDC_AUTO_RUN);
+    if (bChecked != bAutoStart)
+    {
+        Profile.EnableAutoStart(bChecked);
+    }
     CDialogEx::OnOK();
 }
-
 
 void CSettingsDialog::OnSpiceSelectBin()
 {

@@ -94,7 +94,13 @@ HCURSOR CSpiceRunnerDlg::OnQueryDragIcon()
 
 void CSpiceRunnerDlg::OnDestroy()
 {
-    m_Servers.RemoveAll();
+    for (int i = 0; i < m_Servers.GetCount(); ++i)
+    {
+        CServerItem& item = *m_Servers[i];
+        CString name = item.Name();
+        BOOL dummy;
+        AfxGetApp()->WriteProfileInt(name, _T("Connect"), !item.IsDisconnected(dummy));
+    }
     m_Icon.Detach();
     CDialogEx::OnDestroy();
 }
@@ -147,11 +153,11 @@ void CSpiceRunnerDlg::PutItemToMenu(const CServerItem& item, CMenu& Menu)
 
 void CSpiceRunnerDlg::PreparePopupMenu(CMenu& Menu)
 {
-    // use temporary array of pointers
+    // use temporary array of const pointers
     CArray<const CServerItem *> ptrs;
     for (UINT i = 0; i < m_Servers.GetCount(); ++i)
     {
-        ptrs.Add(&m_Servers[i]);
+        ptrs.Add(m_Servers[i]);
     }
     // sort the pointers
     std::sort(ptrs.GetData(), ptrs.GetData() + ptrs.GetSize(),
@@ -208,9 +214,9 @@ void CSpiceRunnerDlg::ProcessPopupResult(UINT code)
         for (UINT i = 0; i < m_Servers.GetCount(); ++i)
         {
             CServerItem::eServerAction action;
-            if (m_Servers[i].CheckId(code, action))
+            if (m_Servers[i]->CheckId(code, action))
             {
-                CServerItem& item = m_Servers.GetAt(i);
+                CServerItem& item = *m_Servers.GetAt(i);
                 switch (action)
                 {
                 case CServerItem::esaConnect:
@@ -243,6 +249,7 @@ void CSpiceRunnerDlg::ProcessPopupResult(UINT code)
                     break;
                 }
                 case CServerItem::esaDelete:
+                    delete m_Servers.GetAt(i);
                     m_Servers.RemoveAt(i);
                     SaveServers();
                     break;
@@ -258,7 +265,7 @@ bool IsIdAllocated(UINT id, CServerItemsArray& Servers)
     for (UINT i = 0; i < Servers.GetCount(); ++i)
     {
         CServerItem::eServerAction action;
-        if (Servers[i].CheckId(id, action))
+        if (Servers[i]->CheckId(id, action))
         {
             return true;
         }
@@ -283,19 +290,19 @@ bool CSpiceRunnerDlg::CanAddItem(CServerItem& Item, UINT maxMatches)
 
     for (UINT i = 0; i < m_Servers.GetCount(); ++i)
     {
-        CString s = m_Servers[i].Name();
+        CString s = m_Servers[i]->Name();
         matches += !s.CompareNoCase(Item.Name());
     }
     return matches <= maxMatches;
 }
 
-void CSpiceRunnerDlg::AddServer(CServerItem& Temporary, bool RunIfRequired, bool SilentFail)
+void CSpiceRunnerDlg::AddServer(CServerItem& Temporary, bool DoConnect, bool Loading)
 {
     bool bCanAdd = CanAddItem(Temporary);
 
     if (!bCanAdd)
     {
-        if (SilentFail)
+        if (Loading)
         {
             Log("%s: Can't add duplicated entry %S", __FUNCTION__, Temporary.Name().GetString());
         }
@@ -308,17 +315,20 @@ void CSpiceRunnerDlg::AddServer(CServerItem& Temporary, bool RunIfRequired, bool
         return;
     }
 
-    INT_PTR index = m_Servers.Add(Temporary);
-    CServerItem& newItem = m_Servers.GetAt(index);
+    INT_PTR index = m_Servers.Add(new CServerItem(Temporary));
+    CServerItem& newItem = *m_Servers.GetAt(index);
 
     newItem.m_Id[CServerItem::esaConnect] = GetId(m_Servers);
     newItem.m_Id[CServerItem::esaDisconnect] = GetId(m_Servers);
     newItem.m_Id[CServerItem::esaEdit] = GetId(m_Servers);
     newItem.m_Id[CServerItem::esaDelete] = GetId(m_Servers);
 
-    SaveServers();
+    if (!Loading)
+    {
+        SaveServers();
+    }
 
-    if (index >= 0 && RunIfRequired && newItem.m_ConnectNow)
+    if (index >= 0 && DoConnect)
     {
         Connect(newItem);
     }
@@ -330,7 +340,7 @@ void CSpiceRunnerDlg::OnFileNew()
     CServerDialog d(initial);
     if (d.DoModal() == IDOK)
     {
-        AddServer(initial, true, false);
+        AddServer(initial, initial.m_ConnectNow, false);
     }
 }
 
@@ -362,8 +372,9 @@ void CSpiceRunnerDlg::LoadServers()
             item.m_HostName = AfxGetApp()->GetProfileString(next, _T("Host"), next);
             item.m_Port = AfxGetApp()->GetProfileInt(next, _T("Port"), 0xffff);
             item.m_Viewer = AfxGetApp()->GetProfileInt(next, _T("Viewer"), CServerItem::evwSpice);
+            bool connect = AfxGetApp()->GetProfileInt(next, _T("Connect"), false);
             item.m_WaitTime = AfxGetApp()->GetProfileInt(next, _T("WaitTime"), CProcessRunner::DefaultWaitTime);
-            AddServer(item, false, true);
+            AddServer(item, connect && Profile.m_RestoreConnections, true);
         }
         if (nStart < 0) break;
     } while (true);
@@ -374,7 +385,7 @@ void CSpiceRunnerDlg::SaveServers()
     CString servers;
     for (int i = 0; i < m_Servers.GetCount(); ++i)
     {
-        CServerItem& item = m_Servers[i];
+        CServerItem& item = *m_Servers[i];
         CString name = item.Name();
         AfxGetApp()->WriteProfileString(name, _T("Host"), item.m_HostName);
         AfxGetApp()->WriteProfileInt(name, _T("Port"), item.m_Port);

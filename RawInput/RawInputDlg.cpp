@@ -172,13 +172,14 @@ void CRawInputDlg::OnRawInput(UINT nInputcode, HRAWINPUT hRawInput)
                 len = sizeof(info);
                 nRes = GetRawInputDeviceInfo(header.hDevice, RIDI_DEVICEINFO, &info, &len);
                 PresentData(input, sData);
+                s = sData;
                 if (nRes > 0)
                 {
-                    s.Format(L"%s Hid %04X:%04X (len %d)", nInputcode ? L"Bg" : L"Fg", info.hid.usUsagePage, info.hid.usUsage, datalen);
+                    s.AppendFormat(L" %s Hid %04X:%04X (len %d)", nInputcode ? L"Bg" : L"Fg", info.hid.usUsagePage, info.hid.usUsage, datalen);
                 }
                 else
                 {
-                    s.Format(L"%s Hid (len %d)", nInputcode ? L"Bg" : L"Fg", datalen);
+                    s.AppendFormat(L" %s Hid (len %d) (no device info)", nInputcode ? L"Bg" : L"Fg", datalen);
                 }
                 break;
         }

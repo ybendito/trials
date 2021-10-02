@@ -20,6 +20,8 @@
 #define IDC_VNC_BINARY                  1009
 #define IDC_SELECT_VPN                  1010
 #define IDC_RADIO_VNC                   1010
+#define IDC_EDIT1                       1011
+#define IDC_WAITTIME                    1011
 
 // Next default values for new objects
 // 
@@ -27,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

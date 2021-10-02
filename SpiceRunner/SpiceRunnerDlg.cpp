@@ -362,6 +362,7 @@ void CSpiceRunnerDlg::LoadServers()
             item.m_HostName = AfxGetApp()->GetProfileString(next, _T("Host"), next);
             item.m_Port = AfxGetApp()->GetProfileInt(next, _T("Port"), 0xffff);
             item.m_Viewer = AfxGetApp()->GetProfileInt(next, _T("Viewer"), CServerItem::evwSpice);
+            item.m_WaitTime = AfxGetApp()->GetProfileInt(next, _T("WaitTime"), CProcessRunner::DefaultWaitTime);
             AddServer(item, false, true);
         }
         if (nStart < 0) break;
@@ -378,6 +379,7 @@ void CSpiceRunnerDlg::SaveServers()
         AfxGetApp()->WriteProfileString(name, _T("Host"), item.m_HostName);
         AfxGetApp()->WriteProfileInt(name, _T("Port"), item.m_Port);
         AfxGetApp()->WriteProfileInt(name, _T("Viewer"), item.m_Viewer);
+        AfxGetApp()->WriteProfileInt(name, _T("WaitTime"), item.m_WaitTime);
         servers += name;
         servers += _T(",");
     }

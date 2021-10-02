@@ -3,8 +3,7 @@
 class CProcessRunner
 {
 public:
-    CProcessRunner(ULONG WaitTime = INFINITE) :
-        m_WaitTime(WaitTime)
+    CProcessRunner()
     {
         Clean();
     }
@@ -23,18 +22,23 @@ public:
         si.dwFlags = STARTF_USESHOWWINDOW;
         if (CreateProcess(NULL, CommandLine.GetBuffer(), NULL, NULL, FALSE, 0, NULL, _T("."), &si, &pi))
         {
-            while (WaitForSingleObject(pi.hProcess, m_WaitTime) == WAIT_TIMEOUT)
+            ULONG waitTime = m_WaitTime ? m_WaitTime : INFINITE;
+            Log("Started %S", CommandLine.GetBuffer());
+            while (WaitForSingleObject(pi.hProcess, waitTime) == WAIT_TIMEOUT)
             {
                 if (ShouldTerminate())
                 {
                     Terminate();
                 }
             }
+            Log("Finished %S", CommandLine.GetBuffer());
         }
         if (pi.hProcess) CloseHandle(pi.hProcess);
         if (pi.hThread) CloseHandle(pi.hThread);
         Clean();
     }
+    static const UINT DefaultWaitTime = 0;
+    UINT m_WaitTime = DefaultWaitTime;
 protected:
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -43,7 +47,6 @@ protected:
         memset(&si, 0, sizeof(si));
         memset(&pi, 0, sizeof(pi));
     }
-    ULONG m_WaitTime;
     virtual bool ShouldTerminate() { return false; }
 };
 

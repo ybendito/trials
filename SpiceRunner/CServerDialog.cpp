@@ -30,6 +30,7 @@ void CServerDialog::DoDataExchange(CDataExchange* pDX)
         pDX->Fail();
     }
     DDX_Text(pDX, IDC_PORT, m_Item.m_Port);
+    DDX_Text(pDX, IDC_WAITTIME, m_Item.m_WaitTime);
     DDX_Radio(pDX, IDC_RADIO_SPICE, m_Item.m_Viewer);
     DDV_MinMaxUInt(pDX, m_Item.m_Port, 1, 0xffff);
 }

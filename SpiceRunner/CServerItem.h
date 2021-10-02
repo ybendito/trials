@@ -11,7 +11,7 @@ public:
     enum eViewerType   { evwSpice, evwVNC, evwInvalid };
     LPCTSTR m_ViewerNames[evwInvalid] = { _T("Spice"), _T("VNC") };
 
-    CServerItem() : CProcessRunner(1000)
+    CServerItem()
     {
         for (UINT i = esaFirst; i < esaInvalid; ++i)
         {

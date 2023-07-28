@@ -23,6 +23,7 @@ public:
         m_Data.uVersion = NOTIFYICON_VERSION_4;
         wcscpy_s(m_Data.szTip, InitialName);
         m_Data.uCallbackMessage = m_Message;
+        m_TaskBarMessage = RegisterWindowMessage(TEXT("TaskbarCreated"));
     }
     ~CTaskBarIcon()
     {
@@ -39,6 +40,11 @@ public:
     }
     void ProcessIconMessage(UINT message, WPARAM wParam, LPARAM lParam)
     {
+        if (m_TaskBarMessage && message == m_TaskBarMessage) {
+            Detach();
+            Attach();
+            return;
+        }
         if (!IsIconMessage(message))
             return;
         if (m_IconActive)
@@ -68,6 +74,7 @@ private:
     CTaskBarIconParent& m_Parent;
     NOTIFYICONDATA m_Data;
     UINT m_Message;
+    UINT m_TaskBarMessage;
     bool m_IconActive = false;
     void Op(UINT operation)
     {

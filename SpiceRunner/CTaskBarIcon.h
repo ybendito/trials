@@ -24,22 +24,30 @@ public:
         wcscpy_s(m_Data.szTip, InitialName);
         m_Data.uCallbackMessage = m_Message;
         m_TaskBarMessage = RegisterWindowMessage(TEXT("TaskbarCreated"));
+        Log("TaskbarCreated message = %d", m_TaskBarMessage);
     }
     ~CTaskBarIcon()
     {
     }
     void Attach()
     {
+        Log("%s", __FUNCTION__);
         m_Data.hWnd = m_Parent.GetWindowHandle();
         Op(NIM_ADD);
         Op(NIM_SETVERSION);
     }
     void Detach()
     {
+        Log("%s", __FUNCTION__);
         Op(NIM_DELETE);
     }
     void ProcessIconMessage(UINT message, WPARAM wParam, LPARAM lParam)
     {
+        if (message == WM_TIMER && !CheckIcon()) {
+            Detach();
+            Attach();
+            return;
+        }
         if (m_TaskBarMessage && message == m_TaskBarMessage) {
             Detach();
             Attach();
@@ -76,13 +84,23 @@ private:
     UINT m_Message;
     UINT m_TaskBarMessage;
     bool m_IconActive = false;
-    void Op(UINT operation)
+    bool Op(UINT operation)
     {
-        Shell_NotifyIcon(operation, &m_Data);
+        bool b = Shell_NotifyIcon(operation, &m_Data);
+        if (!b) {
+            Log("%s: error on operation %d", __FUNCTION__, operation);
+        }
+        return b;
     }
     bool IsIconMessage(UINT msg)
     {
         return msg == m_Data.uCallbackMessage;
+    }
+    bool CheckIcon()
+    {
+        bool b = Op(NIM_MODIFY);
+        Log("%s: result %d", __FUNCTION__, b);
+        return b;
     }
     class BooleanHolder
     {

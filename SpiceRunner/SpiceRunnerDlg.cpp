@@ -53,7 +53,10 @@ BOOL CSpiceRunnerDlg::OnInitDialog()
     m_Icon.Attach();
 
     LoadServers();
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	
+    SetTimer(1, 10000, NULL);
+
+    return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 // If you add a minimize button to your dialog, you will need the code below

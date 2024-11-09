@@ -79,7 +79,7 @@ private:
 extern CApplicationProfile Profile;
 
 
-#define Log(format, ...) _Log(format ## "\r\n", __VA_ARGS__)
+#define Log(format, ...) _Log("SpiceRunner: " ## format ## "\r\n", __VA_ARGS__)
 
 static inline void _Log(LPCSTR format, ...)
 {

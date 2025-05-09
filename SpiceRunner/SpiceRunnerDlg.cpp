@@ -149,15 +149,76 @@ void CSpiceRunnerDlg::PutItemToMenu(const CServerItem& item, CMenu& Menu)
     }
 
     Menu.AppendMenu(MF_STRING | MF_POPUP | flag, (UINT_PTR)m.GetSafeHmenu(), item.Name(true));
+    // set bitmap on last added item, i.e. just added popup menu
     Menu.SetMenuItemBitmaps(Menu.GetMenuItemCount() - 1, MF_BYPOSITION, NULL,
         (bActive && bConnected) ? &m_GreenBitmap : &m_BlackBitmap);
+    m.Detach();
+}
+
+void CSpiceRunnerDlg::FlushItemsToMenu(CItems& Items, CMenu& Menu)
+{
+    switch (Items.GetCount())
+    {
+        case 0:
+            return;
+        case 1:
+            PutItemToMenu(*Items[0], Menu);
+            return;
+        default:
+            break;
+    }
+    BOOL  bAnyConnected = false;
+    BOOL  bAnyActive = false;
+
+    CMenu m;
+    m.CreatePopupMenu();
+
+    for (UINT i = 0; i < Items.GetCount(); ++i)
+    {
+        const CServerItem* item = Items[i];
+        BOOL  bConnected;
+        BOOL  bActive = !item->IsDisconnected(bConnected);
+        if (!bAnyConnected)
+        {
+            bAnyConnected |= bConnected;
+        }
+        if (!bAnyActive)
+        {
+            bAnyActive |= bActive;
+        }
+    }
+
+    Menu.AppendMenu(MF_STRING | MF_POPUP | (bAnyActive ? MF_CHECKED : 0), (UINT_PTR)m.GetSafeHmenu(), Items[0]->m_HostName);
+    // set bitmap on last added item, i.e. just added popup menu
+    Menu.SetMenuItemBitmaps(Menu.GetMenuItemCount() - 1, MF_BYPOSITION, NULL,
+        (bAnyActive && bAnyConnected) ? &m_GreenBitmap : &m_BlackBitmap);
+
+    // present classified by viewer type
+    for (int v = CServerItem::evwSpice; v < CServerItem::evwInvalid; ++v)
+    {
+        UINT done = 0;
+        for (UINT i = 0; i < Items.GetCount(); ++i)
+        {
+            const CServerItem* item = Items[i];
+            if (item->m_Viewer == v)
+            {
+                PutItemToMenu(*item, m);
+                done++;
+            }
+        }
+        if (done)
+        {
+            m.AppendMenu(MF_SEPARATOR);
+        }
+    }
     m.Detach();
 }
 
 void CSpiceRunnerDlg::PreparePopupMenu(CMenu& Menu)
 {
     // use temporary array of const pointers
-    CArray<const CServerItem *> ptrs;
+    CItems ptrs;
+    CMapStringToPtr menuMap;
     for (UINT i = 0; i < m_Servers.GetCount(); ++i)
     {
         ptrs.Add(m_Servers[i]);
@@ -169,25 +230,28 @@ void CSpiceRunnerDlg::PreparePopupMenu(CMenu& Menu)
             return *i1 < *i2;
         });
 
-    // present classified by viewer type and sorted inside the type
-    for (int v = CServerItem::evwSpice; v < CServerItem::evwInvalid; ++v)
+    CString name;
+    CItems items;
+
+    for (UINT i = 0; i < ptrs.GetCount(); ++i)
     {
-        UINT done = 0;
-        for (UINT i = 0; i < ptrs.GetCount(); ++i)
+        const CServerItem* item = ptrs[i];
+        if (item->m_HostName.Compare(name))
         {
-            const CServerItem *item = ptrs[i];
-            if (item->m_Viewer == v)
-            {
-                PutItemToMenu(*item, Menu);
-                done++;
-            }
+            FlushItemsToMenu(items, Menu);
+            name = item->m_HostName;
+            items.RemoveAll();
+            items.Add(ptrs[i]);
         }
-        if (done)
+        else
         {
-            Menu.AppendMenu(MF_SEPARATOR);
+            items.Add(ptrs[i]);
         }
     }
-    
+    FlushItemsToMenu(items, Menu);
+
+    Menu.AppendMenu(MF_SEPARATOR);
+
     Menu.AppendMenu(MF_STRING, ID_FILE_NEW, _T("New..."));
     Menu.AppendMenu(MF_SEPARATOR);
     Menu.AppendMenu(MF_STRING, ID_APP_ABOUT, _T("Settings..."));

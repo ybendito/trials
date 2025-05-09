@@ -140,3 +140,5 @@ public:
         }
     }
 };
+
+typedef CArray<const CServerItem*> CItems;

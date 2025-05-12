@@ -77,9 +77,9 @@ public:
         return i1.Name() < i2.Name();
     }
     CString m_HostName;
-    UINT    m_Port = 10400;
+    UINT    m_Port = 590;
     BOOL    m_ConnectNow = false;
-    int     m_Viewer = evwSpice;
+    int     m_Viewer = evwVNC;
     INT     m_Id[esaInvalid];
 protected:
     bool m_Available;

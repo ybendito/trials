@@ -37,7 +37,7 @@ public:
         if (pi.hThread) CloseHandle(pi.hThread);
         Clean();
     }
-    static const UINT DefaultWaitTime = 3;
+    static const UINT DefaultWaitTime = 0;
     UINT m_WaitTime = DefaultWaitTime;
 protected:
     STARTUPINFO si;

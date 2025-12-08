@@ -97,12 +97,14 @@ HCURSOR CSpiceRunnerDlg::OnQueryDragIcon()
 
 void CSpiceRunnerDlg::OnDestroy()
 {
+    Log("%s", __FUNCTION__);
     for (int i = 0; i < m_Servers.GetCount(); ++i)
     {
         CServerItem& item = *m_Servers[i];
         CString name = item.Name();
         BOOL dummy;
         AfxGetApp()->WriteProfileInt(name, _T("Connect"), !item.IsDisconnected(dummy));
+        item.StopThread(false);
     }
     m_Icon.Detach();
     CDialogEx::OnDestroy();

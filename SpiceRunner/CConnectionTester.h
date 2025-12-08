@@ -18,10 +18,6 @@ public:
         m_bOwnMessageLoop(OwnMessageLoop)
     {
     }
-    void DoLog(LPCSTR Message)
-    {
-        Log("%s %S:%d %s", m_Name.GetString(), m_Host, m_Port, Message);
-    }
     bool Update(const CString& host, UINT port, INT timeout)
     {
         bool bRet = false;
@@ -78,6 +74,10 @@ protected:
     LPCTSTR m_Host;
     UINT    m_Port;
     CStringA m_Name;
+    void DoLog(LPCSTR Message)
+    {
+        Log("%s %S:%d %s", m_Name.GetString(), m_Host, m_Port, Message);
+    }
     void DoMessageLoop()
     {
         if (!m_bOwnMessageLoop)

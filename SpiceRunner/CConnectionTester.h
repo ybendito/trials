@@ -10,6 +10,8 @@ protected:
     ULONG m_Error;
 };
 
+#if USE_ASYNC_SOCKET
+
 class CConnectionTester : public CAsyncSocket
 {
 public:
@@ -127,3 +129,65 @@ protected:
         __super::OnClose(nErrorCode);
     }
 };
+
+#else
+
+class CConnectionTester
+{
+public:
+    CConnectionTester(const LPCSTR Name, bool Unused)
+    {
+        WSADATA wsaData;
+        m_Name = Name;
+        m_bRegistered = !WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (m_bRegistered)
+        {
+            m_Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        }
+    }
+    ~CConnectionTester()
+    {
+        if (m_Socket != INVALID_SOCKET)
+        {
+            closesocket(m_Socket);
+        }
+        if (m_bRegistered)
+        {
+            WSACleanup();
+        }
+    }
+    bool Update(const CString& Host, UINT Port, INT Timeout)
+    {
+        if (m_Socket == INVALID_SOCKET)
+        {
+            return false;
+        }
+        m_Port = Port;
+        m_Host = Host;
+        CString sPort;
+        timeval timeout;
+        timeout.tv_sec = Timeout / 1000;
+        timeout.tv_usec = (Timeout % 1000) * 1000;
+        sPort.Format(L"%d", Port);
+        DoLog("Connecting");
+        bool b = WSAConnectByName(m_Socket, (LPTSTR)Host.GetString(), sPort.GetBuffer(), NULL, NULL, NULL, NULL, &timeout, NULL);
+        DoLog(b ? "Connected" : "Not connected");
+        if (!b)
+        {
+            Sleep(Timeout);
+        }
+        return b;
+    }
+protected:
+    bool m_bRegistered;
+    SOCKET m_Socket = INVALID_SOCKET;
+    CString m_Name;
+    LPCTSTR m_Host = _T("");
+    UINT m_Port;
+    void DoLog(LPCSTR Message)
+    {
+        Log("%s %S:%d %s", m_Name.GetString(), m_Host, m_Port, Message);
+    }
+};
+
+#endif
